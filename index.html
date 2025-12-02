@@ -1,95 +1,555 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Influencer Information Form</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f5f5f5;
-      padding: 20px;
-    }
-    .container {
-      max-width: 500px;
-      margin: auto;
-      background: white;
-      padding: 25px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    input, button {
-      width: 100%;
-      margin-top: 10px;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-    }
-    button {
-      background: #007bff;
-      color: white;
-      font-weight: bold;
-      border: none;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #0056b3;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flexible Influencer Data Collector</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+        }
+        .container-card {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #10b981; /* Tailwind emerald-500 */
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .header-bg {
+            background-color: #065f46; /* Dark Green */
+        }
+    </style>
 </head>
-<body>
-<div class="container">
-  <h2>Influencer Information Form</h2>
-  
-  <form action="https://formspree.io/f/yourFormID" method="POST">
-    <label>Channel/Page Name</label>
-    <input type="text" name="channel_name" required>
-    
-    <label>Followers/Subscribers</label>
-    <input type="number" name="followers" required>
-    
-    <label>Country</label>
-    <input type="text" name="country" id="country" required onkeyup="updateCurrency()">
-    
-    <label id="min_charges_label">Minimum Charges (₹)</label>
-    <input type="number" name="min_charges" required>
-    
-    <label>Phone Number</label>
-    <input type="text" name="phone_number" required>
-    
-    <button type="submit">Submit</button>
-  </form>
-</div>
+<body class="p-4 md:p-8 min-h-screen flex flex-col items-center">
 
-<script>
-  // 3. JavaScript function to update the currency based on the country input
-  function updateCurrency() {
-    const countryInput = document.getElementById('country');
-    const currencyLabel = document.getElementById('min_charges_label');
-    const country = countryInput.value.trim().toLowerCase();
-    
-    let currencySymbol = '';
-    
-    // --- Currency Logic Lookup Table ---
-    // You would expand this list for more countries
-    if (country === 'india' || country === 'in') {
-      currencySymbol = '₹'; // Indian Rupee
-    } else if (country === 'united states' || country === 'usa' || country === 'us') {
-      currencySymbol = '$'; // US Dollar
-    } else if (country === 'united kingdom' || country === 'uk') {
-      currencySymbol = '£'; // British Pound
-    } else if (country === 'germany' || country === 'france' || country === 'spain') {
-      currencySymbol = '€'; // Euro
-    } else if (country === 'japan' || country === 'jp') {
-      currencySymbol = '¥'; // Japanese Yen
-    } else {
-      // Default or unknown country
-      currencySymbol = '(Local Currency)'; 
-    }
-    // ------------------------------------
-    
-    // Update the label text
-    currencyLabel.innerHTML = `Minimum Charges (${currencySymbol})`;
-  }
-</script>
+    <!-- Main Container -->
+    <div class="w-full max-w-5xl bg-white container-card rounded-xl">
+        
+        <!-- Header -->
+        <div class="header-bg text-white p-6 rounded-t-xl">
+            <h1 class="text-3xl font-extrabold mb-1">Flexible Influencer Scout Dashboard</h1>
+            <p class="text-sm font-light">Collect, categorize, and manage your potential channel partners.</p>
+            <div id="authStatus" class="text-xs mt-2 p-1 bg-emerald-700 rounded w-fit">
+                Authenticating...
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="p-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Left Column: Data Input Form -->
+            <div class="lg:col-span-1 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Add New Influencer</h2>
+                
+                <form id="influencerForm" class="space-y-4">
+                    
+                    <!-- Channel Name -->
+                    <div>
+                        <label for="channelName" class="block text-sm font-medium text-gray-700">Channel/Page Name <span class="text-red-500">*</span></label>
+                        <input type="text" id="channelName" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 p-2.5">
+                    </div>
+
+                    <!-- Channel Type (Select + Other Input) -->
+                    <div>
+                        <label for="channelType" class="block text-sm font-medium text-gray-700">Channel Type <span class="text-red-500">*</span></label>
+                        <select id="channelType" required onchange="handleOtherType()" class="mt-1 block w-full pl-3 pr-10 py-2.5 text-base border-gray-300 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 rounded-md shadow-sm transition">
+                            <option value="" disabled selected>Select a category</option>
+                            <option value="Gym/Fitness">🏋️ Gym/Fitness</option>
+                            <option value="Gaming/Esports">🎮 Gaming/Esports</option>
+                            <option value="Cooking/Food">🍳 Cooking/Food</option>
+                            <option value="Technology/AI">🤖 Technology/AI</option>
+                            <option value="Travel/Vlog">✈️ Travel/Vlog</option>
+                            <option value="Finance/Investing">📈 Finance/Investing</option>
+                            <option value="Beauty/Fashion">💅 Beauty/Fashion</option>
+                            <option value="DIY/Crafts">🛠️ DIY/Crafts</option>
+                            <option value="Education/Science">🔬 Education/Science</option>
+                            <option value="Other">... Other (Specify below)</option>
+                        </select>
+                        <input type="text" id="otherChannelType" placeholder="Specify your custom type" class="mt-2 hidden w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 p-2.5" disabled>
+                    </div>
+
+                    <!-- Followers (Free Text Input) -->
+                    <div>
+                        <label for="followers" class="block text-sm font-medium text-gray-700">Followers/Subscribers (e.g., 120K, 1M, 500k) <span class="text-red-500">*</span></label>
+                        <input type="text" id="followers" required placeholder="e.g., 500K or 1.2M" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 p-2.5">
+                    </div>
+
+                    <!-- Country -->
+                    <div>
+                        <label for="country" class="block text-sm font-medium text-gray-700">Country <span class="text-red-500">*</span></label>
+                        <select id="country" required class="mt-1 block w-full pl-3 pr-10 py-2.5 text-base border-gray-300 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 rounded-md shadow-sm transition">
+                            <!-- Options populated by JS -->
+                        </select>
+                    </div>
+
+                    <!-- Minimum Charges (Dynamic Currency) -->
+                    <div>
+                        <label for="minCharge" class="block text-sm font-medium text-gray-700">Minimum Charge (Per Post/Campaign)</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span id="currencySymbol" class="text-gray-500 sm:text-sm">$</span>
+                            </div>
+                            <input type="number" id="minCharge" placeholder="Optional" min="0" step="1" class="block w-full pl-7 pr-3 py-2.5 rounded-md border-gray-300 focus:border-emerald-500 focus:ring-emerald-500">
+                        </div>
+                    </div>
+
+                    <!-- Phone Number -->
+                    <div>
+                        <label for="phoneNumber" class="block text-sm font-medium text-gray-700">Phone Number (Optional)</label>
+                        <input type="tel" id="phoneNumber" placeholder="+X (XXX) XXX-XXXX" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 p-2.5">
+                    </div>
+                    
+                    <!-- Submit Button -->
+                    <button type="submit" id="saveBtn" class="w-full flex items-center justify-center py-3 px-4 border border-transparent rounded-md shadow-md text-base font-semibold text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition duration-150">
+                        <span id="buttonText">Save Influencer</span>
+                        <div id="loadingSpinner" class="spinner ml-3 hidden"></div>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Right Column: Collected Data Table -->
+            <div class="lg:col-span-2">
+                <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Collected Influencers (Real-time)</h2>
+                
+                <div class="overflow-x-auto bg-white rounded-lg border border-gray-200 shadow-inner">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Channel</th>
+                                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type / Followers</th>
+                                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Min. Charge</th>
+                                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="influencersTableBody" class="bg-white divide-y divide-gray-200">
+                            <tr>
+                                <td colspan="5" class="px-3 py-4 text-center text-sm text-gray-500 italic">
+                                    <span id="tableStatus">Loading data...</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Modal for Messages (Instead of alert() or confirm()) -->
+    <div id="messageModal" class="fixed inset-0 bg-gray-600 bg-opacity-75 hidden items-center justify-center z-50 transition-opacity duration-300">
+        <div class="bg-white p-6 rounded-lg shadow-2xl w-full max-w-sm transform scale-100 transition-transform duration-300">
+            <h3 id="modalTitle" class="text-lg font-semibold text-gray-800 mb-3">System Message</h3>
+            <p id="modalMessage" class="text-gray-600 mb-4"></p>
+            <div class="flex justify-end space-x-2">
+                <button id="modalConfirmBtn" onclick="modalCallback(true)" class="hidden py-2 px-4 rounded-md bg-red-600 text-white font-medium hover:bg-red-700 transition">Confirm</button>
+                <button id="modalCloseBtn" onclick="modalCallback(false)" class="py-2 px-4 rounded-md bg-emerald-600 text-white font-medium hover:bg-emerald-700 transition">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK Imports -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, setLogLevel, deleteDoc, doc, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- Firebase/Auth Setup Variables (MANDATORY) ---
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        
+        // Global Firebase instances
+        let app, db, auth;
+        let userId = null;
+        let isAuthReady = false;
+
+        // --- UI Elements ---
+        const authStatus = document.getElementById('authStatus');
+        const influencerForm = document.getElementById('influencerForm');
+        const channelNameInput = document.getElementById('channelName');
+        const channelTypeSelect = document.getElementById('channelType');
+        const otherChannelTypeInput = document.getElementById('otherChannelType');
+        const followersInput = document.getElementById('followers'); // Changed to input
+        const countrySelect = document.getElementById('country');
+        const currencySymbolSpan = document.getElementById('currencySymbol');
+        const minChargeInput = document.getElementById('minCharge');
+        const phoneNumberInput = document.getElementById('phoneNumber');
+        const saveBtn = document.getElementById('saveBtn');
+        const buttonText = document.getElementById('buttonText');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const influencersTableBody = document.getElementById('influencersTableBody');
+        const tableStatus = document.getElementById('tableStatus');
+
+        // Modal elements (unchanged)
+        const messageModal = document.getElementById('messageModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalConfirmBtn = document.getElementById('modalConfirmBtn');
+        const modalCloseBtn = document.getElementById('modalCloseBtn');
+        let currentModalResolver = null;
+
+        // --- Core Data: Countries and Currencies (Expanded) ---
+        const COUNTRIES_AND_CURRENCIES = [
+            { code: "USA", country: "United States", currency: "USD", symbol: "$" },
+            { code: "IND", country: "India", currency: "INR", symbol: "₹" },
+            { code: "GBR", country: "United Kingdom", currency: "GBP", symbol: "£" },
+            { code: "CAN", country: "Canada", currency: "CAD", symbol: "C$" },
+            { code: "AUS", country: "Australia", currency: "AUD", symbol: "A$" },
+            { code: "EUR", country: "Eurozone (e.g., Germany, France)", currency: "EUR", symbol: "€" },
+            { code: "JPN", country: "Japan", currency: "JPY", symbol: "¥" },
+            { code: "CHN", country: "China", currency: "CNY", symbol: "¥" },
+            { code: "BRA", country: "Brazil", currency: "BRL", symbol: "R$" },
+            { code: "RUS", country: "Russia", currency: "RUB", symbol: "₽" },
+            { code: "KOR", country: "South Korea", currency: "KRW", symbol: "₩" },
+            { code: "SGP", country: "Singapore", currency: "SGD", symbol: "S$" },
+            { code: "MEX", country: "Mexico", currency: "MXN", symbol: "Mex$" },
+            { code: "ZAF", country: "South Africa", currency: "ZAR", symbol: "R" },
+        ];
+        
+        // Currency fallback for countries not in the list
+        const DEFAULT_CURRENCY_SYMBOL = '$';
+        const DEFAULT_CURRENCY_CODE = 'USD';
+
+
+        // --- UI Utilities ---
+
+        /** Shows a custom modal (like an alert). */
+        function showModal(title, message) {
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            modalConfirmBtn.classList.add('hidden');
+            modalCloseBtn.textContent = 'Close';
+            messageModal.classList.remove('hidden');
+            messageModal.classList.add('flex');
+            return new Promise(resolve => {
+                currentModalResolver = resolve;
+            });
+        }
+
+        /** Shows a custom modal (like a confirmation dialog). */
+        function showConfirm(title, message) {
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            modalConfirmBtn.classList.remove('hidden');
+            modalCloseBtn.textContent = 'Cancel';
+            messageModal.classList.remove('hidden');
+            messageModal.classList.add('flex');
+            return new Promise(resolve => {
+                currentModalResolver = resolve;
+            });
+        }
+
+        /** Callback function for modal buttons. */
+        window.modalCallback = function(result) {
+            messageModal.classList.add('hidden');
+            messageModal.classList.remove('flex');
+            if (currentModalResolver) {
+                currentModalResolver(result);
+                currentModalResolver = null;
+            }
+        }
+
+        /** Sets the loading state for the save button. */
+        function setLoading(isLoading) {
+            saveBtn.disabled = isLoading;
+            if (isLoading) {
+                buttonText.textContent = 'Saving...';
+                loadingSpinner.classList.remove('hidden');
+            } else {
+                buttonText.textContent = 'Save Influencer';
+                loadingSpinner.classList.add('hidden');
+            }
+        }
+
+        /** Toggles the 'Other' channel type input visibility and requirement. */
+        window.handleOtherType = function() {
+            const isOther = channelTypeSelect.value === 'Other';
+            if (isOther) {
+                otherChannelTypeInput.classList.remove('hidden');
+                otherChannelTypeInput.required = true;
+                otherChannelTypeInput.disabled = false;
+            } else {
+                otherChannelTypeInput.classList.add('hidden');
+                otherChannelTypeInput.required = false;
+                otherChannelTypeInput.disabled = true;
+                otherChannelTypeInput.value = ''; // Clear input when hidden
+            }
+        }
+
+        /** Populates the country dropdown and sets the initial currency symbol. */
+        function populateCountryDropdown() {
+            // Include a comprehensive list of all countries (simulated for simplicity)
+            const allCountries = [
+                ...COUNTRIES_AND_CURRENCIES,
+                { code: "AFG", country: "Afghanistan", currency: "AFN", symbol: "؋" },
+                { code: "ARG", country: "Argentina", currency: "ARS", symbol: "$" },
+                { code: "NGA", country: "Nigeria", currency: "NGN", symbol: "₦" },
+                { code: "SWE", country: "Sweden", currency: "SEK", symbol: "kr" },
+                { code: "PAK", country: "Pakistan", currency: "PKR", symbol: "₨" },
+                // ... more countries would be listed here in a complete app
+            ];
+
+            // Add all unique countries to the dropdown
+            countrySelect.innerHTML = '<option value="" disabled selected>Select a country</option>';
+            countrySelect.innerHTML += allCountries.map(item => 
+                `<option value="${item.code}" data-currency="${item.currency || DEFAULT_CURRENCY_CODE}" data-symbol="${item.symbol || DEFAULT_CURRENCY_SYMBOL}">${item.country}</option>`
+            ).join('');
+            
+            // Set default symbol
+            currencySymbolSpan.textContent = DEFAULT_CURRENCY_SYMBOL;
+        }
+
+        /** Updates the currency symbol based on the selected country, using USD as fallback. */
+        window.updateCurrencySymbol = function() {
+            const selectedOption = countrySelect.options[countrySelect.selectedIndex];
+            const countryCode = selectedOption?.value;
+            
+            const currencyData = COUNTRIES_AND_CURRENCIES.find(c => c.code === countryCode);
+            
+            let symbol = DEFAULT_CURRENCY_SYMBOL;
+            let currency = DEFAULT_CURRENCY_CODE;
+
+            if (currencyData) {
+                symbol = currencyData.symbol;
+                currency = currencyData.currency;
+            } 
+            // If country isn't in our defined list, it defaults to USD ($).
+            
+            currencySymbolSpan.textContent = symbol;
+        }
+        
+        // Attach listener for currency update
+        countrySelect.addEventListener('change', updateCurrencySymbol);
+
+
+        // --- Firebase Initialization and Auth ---
+
+        async function initializeFirebase() {
+            try {
+                // Initialize Firebase App
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                setLogLevel('Debug'); // Enable Firestore logging
+
+                // 1. Initial Sign-In attempt
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                // 2. Set up Auth State Listener
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        isAuthReady = true;
+                        authStatus.textContent = `User ID: ${userId}`;
+                        authStatus.classList.replace('bg-emerald-700', 'bg-green-700');
+                        loadInfluencers(); // Start listening for data once authenticated
+                    } else {
+                        userId = null;
+                        isAuthReady = true;
+                        authStatus.textContent = `Signed in Anonymously (No Persistence)`;
+                        authStatus.classList.replace('bg-emerald-700', 'bg-red-700');
+                        loadInfluencers(); // Still try to load data if permissions allow
+                    }
+                });
+
+            } catch (e) {
+                console.error("Firebase initialization failed:", e);
+                showModal("Error", `Failed to initialize Firebase: ${e.message}`);
+                authStatus.textContent = `Error: Initialization Failed`;
+                authStatus.classList.replace('bg-emerald-700', 'bg-red-700');
+            }
+        }
+
+        // --- Firestore Operations ---
+
+        /** Gets the Firestore collection path for the user's private data. */
+        function getCollectionRef() {
+            if (!db || !userId) {
+                console.error("Database or User ID not ready.");
+                return null;
+            }
+            // Private user data collection path
+            return collection(db, `artifacts/${appId}/users/${userId}/influencers`);
+        }
+
+        /** Saves a new influencer to Firestore. */
+        async function saveInfluencer(event) {
+            event.preventDefault();
+            
+            if (!isAuthReady || !userId) {
+                showModal("Authentication Required", "Please wait for authentication to complete before saving data.");
+                return;
+            }
+
+            setLoading(true);
+
+            // Determine the final channel type
+            let finalChannelType = channelTypeSelect.value;
+            if (finalChannelType === 'Other') {
+                finalChannelType = otherChannelTypeInput.value.trim() || 'Unspecified';
+            }
+
+            // Get selected country details and currency (using fallback logic)
+            const selectedOption = countrySelect.options[countrySelect.selectedIndex];
+            const countryName = selectedOption.textContent; 
+            const countryCode = selectedOption.value;
+            
+            const currencyData = COUNTRIES_AND_CURRENCIES.find(c => c.code === countryCode);
+            const finalCurrency = currencyData ? currencyData.currency : DEFAULT_CURRENCY_CODE;
+            
+            const minChargeValue = parseFloat(minChargeInput.value);
+
+            const influencerData = {
+                channelName: channelNameInput.value.trim(),
+                type: finalChannelType,
+                followers: followersInput.value.trim(), // Now a free text field
+                country: countryName,
+                currency: finalCurrency,
+                minCharge: isNaN(minChargeValue) ? null : minChargeValue,
+                phoneNumber: phoneNumberInput.value.trim() || null,
+                timestamp: new Date().toISOString() 
+            };
+
+            try {
+                await addDoc(getCollectionRef(), influencerData);
+                showModal("Success", `Data for "${influencerData.channelName}" has been successfully saved.`);
+                influencerForm.reset();
+                window.handleOtherType(); // Hide custom input on reset
+                updateCurrencySymbol(); // Reset currency symbol display
+            } catch (error) {
+                console.error("Error adding document: ", error);
+                showModal("Save Error", `There was an error saving the influencer data: ${error.message}`);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        /** Deletes an influencer document by ID. */
+        window.deleteInfluencer = async function(docId, channelName) {
+            if (!isAuthReady || !userId) {
+                showModal("Authentication Error", "Cannot delete. Authentication is not ready.");
+                return;
+            }
+
+            const confirmDelete = await showConfirm(
+                "Confirm Deletion",
+                `Are you sure you want to delete the record for "${channelName}"? This action cannot be undone.`
+            );
+
+            if (!confirmDelete) return;
+
+            try {
+                const docRef = doc(db, `artifacts/${appId}/users/${userId}/influencers`, docId);
+                await deleteDoc(docRef);
+                showModal("Deleted", `Record for "${channelName}" has been successfully removed.`);
+            } catch (error) {
+                console.error("Error deleting document: ", error);
+                showModal("Deletion Error", `Failed to delete record: ${error.message}`);
+            }
+        }
+
+        /** Loads influencers in real-time using onSnapshot. */
+        function loadInfluencers() {
+            if (!isAuthReady || !userId) return;
+
+            const q = query(getCollectionRef()); 
+
+            // Set initial status
+            tableStatus.textContent = "Fetching data...";
+
+            onSnapshot(q, (snapshot) => {
+                const influencers = [];
+                snapshot.forEach((doc) => {
+                    influencers.push({ id: doc.id, ...doc.data() });
+                });
+                
+                renderInfluencers(influencers);
+            }, (error) => {
+                console.error("Error listening to documents: ", error);
+                tableStatus.textContent = "Error loading data.";
+                showModal("Load Error", `Could not load real-time data: ${error.message}`);
+            });
+        }
+
+        /** Renders the list of influencers into the table. */
+        function renderInfluencers(influencers) {
+            influencersTableBody.innerHTML = '';
+
+            if (influencers.length === 0) {
+                influencersTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="px-3 py-6 text-center text-sm text-gray-500 italic">
+                            ${isAuthReady ? 'No influencers collected yet. Add one using the form.' : 'Waiting for authentication...'}
+                        </td>
+                    </tr>
+                `;
+                tableStatus.textContent = "Ready";
+                return;
+            }
+
+            influencers.forEach(inf => {
+                // Find the correct symbol, default to USD if not found in COUNTRIES_AND_CURRENCIES
+                const symbol = COUNTRIES_AND_CURRENCIES.find(c => c.currency === inf.currency)?.symbol || DEFAULT_CURRENCY_SYMBOL;
+
+                const chargeDisplay = inf.minCharge !== null 
+                    ? `${symbol}${inf.minCharge.toLocaleString()}`
+                    : 'N/A';
+
+                const phoneDisplay = inf.phoneNumber || 'N/A';
+                
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-emerald-50 transition duration-100';
+                row.innerHTML = `
+                    <td class="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <div class="font-semibold">${inf.channelName}</div>
+                        <div class="text-xs text-gray-500">${inf.country}</div>
+                    </td>
+                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-700">
+                        <div class="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 w-fit mb-1">${inf.type}</div>
+                        <div class="text-xs text-gray-600">${inf.followers}</div>
+                    </td>
+                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-800 font-medium">
+                        ${chargeDisplay} <span class="text-xs text-gray-500 ml-1">${inf.currency || ''}</span>
+                    </td>
+                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-700">
+                        ${phoneDisplay}
+                    </td>
+                    <td class="px-3 py-2 whitespace-nowrap text-right text-sm font-medium">
+                        <button onclick="deleteInfluencer('${inf.id}', '${inf.channelName.replace(/'/g, "\\'")}')" 
+                                class="text-red-600 hover:text-red-900 transition duration-150 p-1 rounded-md hover:bg-red-100">
+                            Delete
+                        </button>
+                    </td>
+                `;
+                influencersTableBody.appendChild(row);
+            });
+            tableStatus.textContent = `Total Records: ${influencers.length}`;
+        }
+
+        // --- Event Listeners and Initial Load ---
+        window.onload = () => {
+            populateCountryDropdown();
+            initializeFirebase();
+        };
+
+        influencerForm.addEventListener('submit', saveInfluencer);
+
+    </script>
 </body>
 </html>
+
