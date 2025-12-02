@@ -523,4 +523,24 @@
 
 </body>
 </html>
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
 
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyAw8chG36OdY8aoPYC21uifUEM9Up8VCtY",
+  authDomain: "infulanser.firebaseapp.com",
+  projectId: "infulanser",
+  storageBucket: "infulanser.firebasestorage.app",
+  messagingSenderId: "337629294118",
+  appId: "1:337629294118:web:505fdaed4b236574cd00e7",
+  measurementId: "G-3VWLNMW985"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
